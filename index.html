@@ -273,12 +273,27 @@
 
             async init() {
                 try {
-                    // Google Sheets APIの設定（実際のスプレッドシートIDとAPIキーを設定してください）
-                    this.SPREADSHEET_ID = '1MVkMewa9yuxq49TZjOKxdN2BI2bo0FLrnwhLsSljbAs'; // スプレッドシートIDを設定
-                    this.API_KEY = 'AIzaSyCE9Am5YbCnKuFK4UkCyH75hTrVAB9n7mo'; // Google API キーを設定
-                    this.TRANSLATE_API_KEY = 'AIzaSyCE9Am5YbCnKuFK4UkCyH75hTrVAB9n7mo'; // Google Translate API キーを設定
+                    // ⭐ 同じAPIキーを使用する場合（推奨） ⭐
+                    
+                    const GOOGLE_API_KEY = 'AIzaSyCE9Am5YbCnKuFK4UkCyH75hTrVAB9n7mo'; // 一つのAPIキーで両方のAPIを使用
+                    
+                    // Google Sheets API設定
+                    this.SPREADSHEET_ID = '1MVkMewa9yuxq49TZjOKxdN2BI2bo0FLrnwhLsSljbAs';
+                    this.API_KEY = GOOGLE_API_KEY; // 同じキー
+                    
+                    // Google Translate API設定  
+                    this.TRANSLATE_API_KEY = GOOGLE_API_KEY; // 同じキー
+                    
+                    // 実際の例:
+                    // const GOOGLE_API_KEY = 'AIzaSyDaGmWKa4JsXMeJXuHiGfDaGmWKa4JsXMe';
+                    // this.SPREADSHEET_ID = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms';
+                    // this.API_KEY = GOOGLE_API_KEY;
+                    // this.TRANSLATE_API_KEY = GOOGLE_API_KEY;
 
-                    // デモ用のサンプルデータ
+                    // 実際のスプレッドシートからデータを読み込む場合は以下のコメントを外す
+                    // await this.loadFromGoogleSheets();
+
+                    // デモ用のサンプルデータ（実際のAPIを使う場合は削除してください）
                     this.menuData = [
                         {
                             name: '特製ラーメン',
@@ -316,21 +331,43 @@
 
             async loadFromGoogleSheets() {
                 try {
+                    console.log('スプレッドシートからデータを読み込み中...');
+                    console.log('SPREADSHEET_ID:', this.SPREADSHEET_ID);
+                    console.log('API_KEY:', this.API_KEY ? 'あり' : 'なし');
+                    
                     const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.SPREADSHEET_ID}/values/Sheet1?key=${this.API_KEY}`;
+                    console.log('API URL:', url);
+                    
                     const response = await fetch(url);
+                    console.log('Response status:', response.status);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('API エラー:', errorText);
+                        throw new Error(`API エラー: ${response.status} - ${errorText}`);
+                    }
+                    
                     const data = await response.json();
+                    console.log('取得したデータ:', data);
                     
                     if (data.values && data.values.length > 1) {
-                        this.menuData = data.values.slice(1).map(row => ({
-                            name: row[0] || '',
-                            price: parseInt(row[1]) || 0,
-                            description: row[2] || '',
-                            imageNumber: parseInt(row[3]) || 1
-                        }));
+                        this.menuData = data.values.slice(1).map((row, index) => {
+                            console.log(`行 ${index + 2}:`, row);
+                            return {
+                                name: row[0] || '',
+                                price: parseInt(row[1]) || 0,
+                                description: row[2] || '',
+                                imageNumber: parseInt(row[3]) || 1
+                            };
+                        });
+                        console.log('変換後のメニューデータ:', this.menuData);
+                    } else {
+                        console.warn('データが見つかりません。data.values:', data.values);
                     }
                 } catch (error) {
                     console.error('スプレッドシートの読み込みに失敗:', error);
-                    // サンプルデータを使用
+                    // エラーの場合は空配列にして、サンプルデータを使用する
+                    this.menuData = [];
                 }
             }
 
@@ -373,27 +410,51 @@
                 }
 
                 try {
-                    // Google Translate APIを使用（実際のAPIキーが必要）
-                    const url = `https://translation.googleapis.com/language/translate/v2?key=${this.TRANSLATE_API_KEY}`;
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            q: text,
-                            target: targetLang,
-                            source: 'ja'
-                        })
-                    });
+                    // 実際のGoogle Translate APIを使用
+                    if (this.TRANSLATE_API_KEY && this.TRANSLATE_API_KEY !== 'あなたのTranslate APIキー') {
+                        const url = `https://translation.googleapis.com/language/translate/v2?key=${this.TRANSLATE_API_KEY}`;
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                q: text,
+                                target: targetLang,
+                                source: 'ja'
+                            })
+                        });
 
-                    const data = await response.json();
-                    const translatedText = data.data.translations[0].translatedText;
-                    this.translatedData[cacheKey] = translatedText;
-                    return translatedText;
+                        const data = await response.json();
+                        if (data.error) {
+                            console.error('翻訳エラー:', data.error);
+                            return text;
+                        }
+                        
+                        const translatedText = data.data.translations[0].translatedText;
+                        this.translatedData[cacheKey] = translatedText;
+                        return translatedText;
+                    } else {
+                        // APIキーが設定されていない場合はサンプル翻訳を使用
+                        const sampleTranslations = {
+                            'en': {
+                                '特製ラーメン': 'Special Ramen',
+                                '海鮮丼': 'Seafood Bowl',
+                                '親子丼': 'Chicken and Egg Bowl',
+                                '天ぷら定食': 'Tempura Set Meal',
+                                '自家製麺と特製スープが自慢の一品。濃厚な豚骨ベースに秘伝のタレを加えた絶品ラーメンです。': 'Our signature dish featuring homemade noodles and special soup. Delicious ramen with rich pork bone base and secret sauce.',
+                                '新鮮な刺身をたっぷり使った海鮮丼。マグロ、サーモン、イカ、ウニなど厳選した海の幸をお楽しみください。': 'Seafood bowl with plenty of fresh sashimi. Enjoy carefully selected seafood including tuna, salmon, squid, and sea urchin.',
+                                'ふわふわの卵と柔らかい鶏肉が絶妙にマッチした定番の親子丼。秘伝のタレで仕上げています。': 'Classic chicken and egg bowl with fluffy eggs and tender chicken perfectly matched. Finished with our secret sauce.',
+                                'サクサクの天ぷらが自慢の定食。海老、野菜、かき揚げなど、季節の食材を使用しています。': 'Set meal featuring crispy tempura. Uses seasonal ingredients including shrimp, vegetables, and mixed tempura.'
+                            },
+                            // 他の言語のサンプル翻訳も追加可能
+                        };
+                        
+                        return sampleTranslations[targetLang]?.[text] || text;
+                    }
                 } catch (error) {
                     console.error('翻訳に失敗:', error);
-                    return text; // 翻訳に失敗した場合は元のテキストを返す
+                    return text;
                 }
             }
 
