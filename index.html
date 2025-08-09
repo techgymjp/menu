@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>あーちゃんのお店 - メニュー</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Hiragino Kaku Gothic Pro', 'Yu Gothic', 'Meiryo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+
+        .title {
+            font-size: 2.5em;
+            color: #4a5568;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .language-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .lang-btn {
+            padding: 8px 12px;
+            background: linear-gradient(145deg, #f0f0f0, #cacaca);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 3px 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .lang-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 5px 5px 10px rgba(0,0,0,0.2);
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(145deg, #4299e1, #3182ce);
+            color: white;
+        }
+
+        .menu-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .menu-slider {
+            display: flex;
+            transition: transform 0.3s ease;
+            touch-action: pan-y;
+        }
+
+        .menu-item {
+            min-width: 100%;
+            padding: 30px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .dish-name {
+            font-size: 2.2em;
+            margin-bottom: 20px;
+            color: #2d3748;
+            font-weight: bold;
+        }
+
+        .dish-image {
+            width: 300px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 20px;
+            margin: 20px auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .dish-image:hover {
+            transform: scale(1.05);
+        }
+
+        .price-container {
+            margin: 20px 0;
+        }
+
+        .price-jpy {
+            font-size: 1.8em;
+            color: #e53e3e;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .price-local {
+            font-size: 1.4em;
+            color: #38a169;
+            font-weight: bold;
+        }
+
+        .dish-description {
+            font-size: 1.2em;
+            line-height: 1.6;
+            color: #4a5568;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(247, 250, 252, 0.8);
+            border-radius: 15px;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .nav-btn {
+            background: linear-gradient(145deg, #4299e1, #3182ce);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(66, 153, 225, 0.4);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 153, 225, 0.6);
+        }
+
+        .nav-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .page-indicator {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4a5568;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.5em;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: #e53e3e;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .title {
+                font-size: 2em;
+            }
+            
+            .dish-image {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .language-selector {
+                grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+                gap: 6px;
+            }
+            
+            .lang-btn {
+                padding: 6px 8px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">あーちゃんのお店</h1>
+            <div class="language-selector">
+                <button class="lang-btn active" data-lang="ja">日本語</button>
+                <button class="lang-btn" data-lang="en">English</button>
+                <button class="lang-btn" data-lang="ko">한국어</button>
+                <button class="lang-btn" data-lang="zh-cn">中文(简)</button>
+                <button class="lang-btn" data-lang="zh-tw">中文(繁)</button>
+                <button class="lang-btn" data-lang="es">Español</button>
+                <button class="lang-btn" data-lang="fr">Français</button>
+                <button class="lang-btn" data-lang="de">Deutsch</button>
+                <button class="lang-btn" data-lang="it">Italiano</button>
+                <button class="lang-btn" data-lang="pt">Português</button>
+                <button class="lang-btn" data-lang="ru">Русский</button>
+                <button class="lang-btn" data-lang="ar">العربية</button>
+                <button class="lang-btn" data-lang="th">ไทย</button>
+                <button class="lang-btn" data-lang="vi">Tiếng Việt</button>
+                <button class="lang-btn" data-lang="hi">हिन्दी</button>
+                <button class="lang-btn" data-lang="id">Indonesia</button>
+                <button class="lang-btn" data-lang="ms">Melayu</button>
+                <button class="lang-btn" data-lang="tl">Filipino</button>
+                <button class="lang-btn" data-lang="nl">Nederlands</button>
+                <button class="lang-btn" data-lang="sv">Svenska</button>
+            </div>
+        </div>
+
+        <div class="menu-container">
+            <div id="menu-content">
+                <div class="loading">メニューを読み込み中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MenuApp {
+            constructor() {
+                this.currentLang = 'ja';
+                this.currentIndex = 0;
+                this.menuData = [];
+                this.translatedData = {};
+                this.exchangeRates = {};
+                this.startX = null;
+                this.currentX = null;
+                this.isDragging = false;
+
+                this.init();
+            }
+
+            async init() {
+                try {
+                    // Google Sheets APIの設定（実際のスプレッドシートIDとAPIキーを設定してください）
+                    this.SPREADSHEET_ID = '1MVkMewa9yuxq49TZjOKxdN2BI2bo0FLrnwhLsSljbAs'; // スプレッドシートIDを設定
+                    this.API_KEY = 'AIzaSyCE9Am5YbCnKuFK4UkCyH75hTrVAB9n7mo'; // Google API キーを設定
+                    this.TRANSLATE_API_KEY = 'AIzaSyCE9Am5YbCnKuFK4UkCyH75hTrVAB9n7mo'; // Google Translate API キーを設定
+
+                    // デモ用のサンプルデータ
+                    this.menuData = [
+                        {
+                            name: '特製ラーメン',
+                            price: 1200,
+                            description: '自家製麺と特製スープが自慢の一品。濃厚な豚骨ベースに秘伝のタレを加えた絶品ラーメンです。',
+                            imageNumber: 1
+                        },
+                        {
+                            name: '海鮮丼',
+                            price: 1800,
+                            description: '新鮮な刺身をたっぷり使った海鮮丼。マグロ、サーモン、イカ、ウニなど厳選した海の幸をお楽しみください。',
+                            imageNumber: 2
+                        },
+                        {
+                            name: '親子丼',
+                            price: 980,
+                            description: 'ふわふわの卵と柔らかい鶏肉が絶妙にマッチした定番の親子丼。秘伝のタレで仕上げています。',
+                            imageNumber: 3
+                        },
+                        {
+                            name: '天ぷら定食',
+                            price: 1500,
+                            description: 'サクサクの天ぷらが自慢の定食。海老、野菜、かき揚げなど、季節の食材を使用しています。',
+                            imageNumber: 4
+                        }
+                    ];
+
+                    await this.loadExchangeRates();
+                    await this.renderMenu();
+                    this.setupEventListeners();
+                } catch (error) {
+                    this.showError('データの読み込みに失敗しました: ' + error.message);
+                }
+            }
+
+            async loadFromGoogleSheets() {
+                try {
+                    const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.SPREADSHEET_ID}/values/Sheet1?key=${this.API_KEY}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    if (data.values && data.values.length > 1) {
+                        this.menuData = data.values.slice(1).map(row => ({
+                            name: row[0] || '',
+                            price: parseInt(row[1]) || 0,
+                            description: row[2] || '',
+                            imageNumber: parseInt(row[3]) || 1
+                        }));
+                    }
+                } catch (error) {
+                    console.error('スプレッドシートの読み込みに失敗:', error);
+                    // サンプルデータを使用
+                }
+            }
+
+            async loadExchangeRates() {
+                try {
+                    // 実際のプロジェクトでは為替レートAPIを使用
+                    // ここではサンプルデータを使用
+                    this.exchangeRates = {
+                        'en': { rate: 0.0067, symbol: '$', name: 'USD' },
+                        'ko': { rate: 8.9, symbol: '₩', name: 'KRW' },
+                        'zh-cn': { rate: 0.048, symbol: '¥', name: 'CNY' },
+                        'zh-tw': { rate: 0.21, symbol: 'NT$', name: 'TWD' },
+                        'es': { rate: 0.0062, symbol: '€', name: 'EUR' },
+                        'fr': { rate: 0.0062, symbol: '€', name: 'EUR' },
+                        'de': { rate: 0.0062, symbol: '€', name: 'EUR' },
+                        'it': { rate: 0.0062, symbol: '€', name: 'EUR' },
+                        'pt': { rate: 0.034, symbol: 'R$', name: 'BRL' },
+                        'ru': { rate: 0.62, symbol: '₽', name: 'RUB' },
+                        'ar': { rate: 0.025, symbol: 'د.إ', name: 'AED' },
+                        'th': { rate: 0.23, symbol: '฿', name: 'THB' },
+                        'vi': { rate: 163, symbol: '₫', name: 'VND' },
+                        'hi': { rate: 0.56, symbol: '₹', name: 'INR' },
+                        'id': { rate: 103, symbol: 'Rp', name: 'IDR' },
+                        'ms': { rate: 0.031, symbol: 'RM', name: 'MYR' },
+                        'tl': { rate: 0.38, symbol: '₱', name: 'PHP' },
+                        'nl': { rate: 0.0062, symbol: '€', name: 'EUR' },
+                        'sv': { rate: 0.073, symbol: 'kr', name: 'SEK' }
+                    };
+                } catch (error) {
+                    console.error('為替レートの読み込みに失敗:', error);
+                }
+            }
+
+            async translateText(text, targetLang) {
+                if (targetLang === 'ja') return text;
+                
+                const cacheKey = `${text}_${targetLang}`;
+                if (this.translatedData[cacheKey]) {
+                    return this.translatedData[cacheKey];
+                }
+
+                try {
+                    // Google Translate APIを使用（実際のAPIキーが必要）
+                    const url = `https://translation.googleapis.com/language/translate/v2?key=${this.TRANSLATE_API_KEY}`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            q: text,
+                            target: targetLang,
+                            source: 'ja'
+                        })
+                    });
+
+                    const data = await response.json();
+                    const translatedText = data.data.translations[0].translatedText;
+                    this.translatedData[cacheKey] = translatedText;
+                    return translatedText;
+                } catch (error) {
+                    console.error('翻訳に失敗:', error);
+                    return text; // 翻訳に失敗した場合は元のテキストを返す
+                }
+            }
+
+            formatPrice(price, lang) {
+                const jpyText = lang === 'ja' ? `¥${price.toLocaleString()}` : `¥${price.toLocaleString()} JPY`;
+                
+                if (lang === 'ja' || !this.exchangeRates[lang]) {
+                    return { jpy: jpyText, local: '' };
+                }
+
+                const rate = this.exchangeRates[lang];
+                const localPrice = Math.round(price * rate.rate);
+                const localText = `${rate.symbol}${localPrice.toLocaleString()} ${rate.name}`;
+
+                return { jpy: jpyText, local: localText };
+            }
+
+            async renderMenu() {
+                const menuContent = document.getElementById('menu-content');
+                
+                if (this.menuData.length === 0) {
+                    menuContent.innerHTML = '<div class="error">メニューデータがありません</div>';
+                    return;
+                }
+
+                const slider = document.createElement('div');
+                slider.className = 'menu-slider';
+                slider.id = 'menu-slider';
+
+                for (let i = 0; i < this.menuData.length; i++) {
+                    const item = this.menuData[i];
+                    const menuItem = document.createElement('div');
+                    menuItem.className = 'menu-item';
+
+                    const name = this.currentLang === 'ja' ? item.name : await this.translateText(item.name, this.currentLang);
+                    const description = this.currentLang === 'ja' ? item.description : await this.translateText(item.description, this.currentLang);
+                    const prices = this.formatPrice(item.price, this.currentLang);
+
+                    menuItem.innerHTML = `
+                        <div class="dish-name">${name}</div>
+                        <img src="${item.imageNumber}.jpg" alt="${name}" class="dish-image" onerror="this.src='placeholder.jpg'">
+                        <div class="price-container">
+                            <div class="price-jpy">${prices.jpy}</div>
+                            ${prices.local ? `<div class="price-local">${prices.local}</div>` : ''}
+                        </div>
+                        <div class="dish-description">${description}</div>
+                    `;
+
+                    slider.appendChild(menuItem);
+                }
+
+                const navigation = document.createElement('div');
+                navigation.className = 'navigation';
+                navigation.innerHTML = `
+                    <button class="nav-btn" id="prev-btn" ${this.currentIndex === 0 ? 'disabled' : ''}>◀ 前へ</button>
+                    <div class="page-indicator">${this.currentIndex + 1} / ${this.menuData.length}</div>
+                    <button class="nav-btn" id="next-btn" ${this.currentIndex === this.menuData.length - 1 ? 'disabled' : ''}>次へ ▶</button>
+                `;
+
+                menuContent.innerHTML = '';
+                menuContent.appendChild(slider);
+                menuContent.appendChild(navigation);
+
+                this.updateSliderPosition();
+                this.setupTouchEvents();
+                this.setupNavigationEvents();
+            }
+
+            setupEventListeners() {
+                const langBtns = document.querySelectorAll('.lang-btn');
+                langBtns.forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const newLang = e.target.dataset.lang;
+                        if (newLang !== this.currentLang) {
+                            // アクティブボタンの更新
+                            document.querySelector('.lang-btn.active').classList.remove('active');
+                            e.target.classList.add('active');
+                            
+                            this.currentLang = newLang;
+                            await this.renderMenu();
+                        }
+                    });
+                });
+            }
+
+            setupNavigationEvents() {
+                const prevBtn = document.getElementById('prev-btn');
+                const nextBtn = document.getElementById('next-btn');
+
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', () => this.previousItem());
+                }
+
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', () => this.nextItem());
+                }
+
+                // キーボードナビゲーション
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowLeft') this.previousItem();
+                    if (e.key === 'ArrowRight') this.nextItem();
+                });
+            }
+
+            setupTouchEvents() {
+                const slider = document.getElementById('menu-slider');
+                if (!slider) return;
+
+                slider.addEventListener('touchstart', (e) => {
+                    this.startX = e.touches[0].clientX;
+                    this.isDragging = true;
+                }, { passive: true });
+
+                slider.addEventListener('touchmove', (e) => {
+                    if (!this.isDragging) return;
+                    this.currentX = e.touches[0].clientX;
+                }, { passive: true });
+
+                slider.addEventListener('touchend', (e) => {
+                    if (!this.isDragging) return;
+                    
+                    const deltaX = this.startX - this.currentX;
+                    const threshold = 50;
+
+                    if (Math.abs(deltaX) > threshold) {
+                        if (deltaX > 0) {
+                            this.nextItem();
+                        } else {
+                            this.previousItem();
+                        }
+                    }
+
+                    this.isDragging = false;
+                    this.startX = null;
+                    this.currentX = null;
+                }, { passive: true });
+
+                // マウスイベントも追加（PC対応）
+                slider.addEventListener('mousedown', (e) => {
+                    this.startX = e.clientX;
+                    this.isDragging = true;
+                    e.preventDefault();
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!this.isDragging) return;
+                    this.currentX = e.clientX;
+                });
+
+                document.addEventListener('mouseup', (e) => {
+                    if (!this.isDragging) return;
+                    
+                    const deltaX = this.startX - this.currentX;
+                    const threshold = 50;
+
+                    if (Math.abs(deltaX) > threshold) {
+                        if (deltaX > 0) {
+                            this.nextItem();
+                        } else {
+                            this.previousItem();
+                        }
+                    }
+
+                    this.isDragging = false;
+                    this.startX = null;
+                    this.currentX = null;
+                });
+            }
+
+            nextItem() {
+                if (this.currentIndex < this.menuData.length - 1) {
+                    this.currentIndex++;
+                    this.updateSliderPosition();
+                    this.updateNavigation();
+                }
+            }
+
+            previousItem() {
+                if (this.currentIndex > 0) {
+                    this.currentIndex--;
+                    this.updateSliderPosition();
+                    this.updateNavigation();
+                }
+            }
+
+            updateSliderPosition() {
+                const slider = document.getElementById('menu-slider');
+                if (slider) {
+                    slider.style.transform = `translateX(-${this.currentIndex * 100}%)`;
+                }
+            }
+
+            updateNavigation() {
+                const prevBtn = document.getElementById('prev-btn');
+                const nextBtn = document.getElementById('next-btn');
+                const pageIndicator = document.querySelector('.page-indicator');
+
+                if (prevBtn) prevBtn.disabled = this.currentIndex === 0;
+                if (nextBtn) nextBtn.disabled = this.currentIndex === this.menuData.length - 1;
+                if (pageIndicator) pageIndicator.textContent = `${this.currentIndex + 1} / ${this.menuData.length}`;
+            }
+
+            showError(message) {
+                const menuContent = document.getElementById('menu-content');
+                menuContent.innerHTML = `<div class="error">${message}</div>`;
+            }
+        }
+
+        // アプリケーションの初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            new MenuApp();
+        });
+    </script>
+</body>
+</html>
