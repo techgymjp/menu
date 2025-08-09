@@ -236,8 +236,8 @@
     <script>
         class MenuApp {
             constructor() {
-                this.apiKey = 'AIzaSyCE9Am5YbCnKuFK4UkCyH75hTrVAB9n7mo';
-                this.sheetId = '1MVkMewa9yuxq49TZjOKxdN2BI2bo0FLrnwhLsSljbAs';
+                // APIエンドポイントを使用（環境変数はサーバーサイドで処理）
+                this.apiEndpoint = '/api';
                 this.menuData = [];
                 this.translatedData = {};
                 this.currentLang = 'ja';
@@ -282,20 +282,37 @@
                 }
             }
 
-            async loadMenuData() {
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}/values/A:D?key=${this.apiKey}`;
-                const response = await fetch(url);
-                const data = await response.json();
+            parsePrice(priceValue) {
+                if (!priceValue) return 0;
                 
-                if (data.values && data.values.length > 1) {
-                    this.menuData = data.values.slice(1).map(row => ({
-                        name: row[0] || '',
-                        price: parseInt(row[1]) || 0,
-                        description: row[2] || '',
-                        imageNumber: row[3] || '1'
-                    }));
-                } else {
-                    throw new Error('メニューデータが見つかりません');
+                // 文字列の場合、数字以外を除去して数値に変換
+                if (typeof priceValue === 'string') {
+                    // 通貨記号、カンマ、スペースを除去して数字のみを抽出
+                    const numericValue = priceValue.replace(/[^\d.-]/g, '');
+                    return parseInt(numericValue) || 0;
+                }
+                
+                // 既に数値の場合はそのまま使用
+                if (typeof priceValue === 'number') {
+                    return Math.round(priceValue);
+                }
+                
+                return 0;
+            }
+
+            async loadMenuData() {
+                try {
+                    const response = await fetch(`${this.apiEndpoint}/menu`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.menuData) {
+                        this.menuData = data.menuData;
+                    } else {
+                        throw new Error(data.error || 'メニューデータが見つかりません');
+                    }
+                } catch (error) {
+                    console.error('Menu loading error:', error);
+                    throw error;
                 }
             }
 
@@ -308,24 +325,21 @@
                 }
 
                 try {
-                    const url = `https://translation.googleapis.com/language/translate/v2?key=${this.apiKey}`;
-                    const response = await fetch(url, {
+                    const response = await fetch(`${this.apiEndpoint}/translate`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            q: text,
-                            target: targetLang,
-                            source: 'ja'
+                            text: text,
+                            targetLang: targetLang
                         })
                     });
 
                     const data = await response.json();
-                    if (data.data && data.data.translations && data.data.translations[0]) {
-                        const translatedText = data.data.translations[0].translatedText;
-                        this.translatedData[cacheKey] = translatedText;
-                        return translatedText;
+                    if (data.success && data.translatedText) {
+                        this.translatedData[cacheKey] = data.translatedText;
+                        return data.translatedText;
                     }
                 } catch (error) {
                     console.error('Translation error:', error);
