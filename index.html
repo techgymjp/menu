@@ -259,6 +259,7 @@
     <script>
         class MenuApp {
             constructor() {
+                console.log('🏗️ MenuAppコンストラクタが呼ばれました');
                 this.currentLang = 'ja';
                 this.currentIndex = 0;
                 this.menuData = [];
@@ -268,6 +269,7 @@
                 this.currentX = null;
                 this.isDragging = false;
 
+                console.log('🔄 初期化を開始します');
                 this.init();
             }
 
@@ -275,7 +277,7 @@
                 try {
                     // ⭐ 同じAPIキーを使用する場合（推奨） ⭐
                     
-                    const GOOGLE_API_KEY = 'AIzaSyCE9Am5YbCnKuFK4UkCyH75hTrVAB9n7mo'; // 一つのAPIキーで両方のAPIを使用
+                    const GOOGLE_API_KEY = '1MVkMewa9yuxq49TZjOKxdN2BI2bo0FLrnwhLsSljbAs'; // 一つのAPIキーで両方のAPIを使用
                     
                     // Google Sheets API設定
                     this.SPREADSHEET_ID = '1MVkMewa9yuxq49TZjOKxdN2BI2bo0FLrnwhLsSljbAs';
@@ -663,9 +665,18 @@
             }
         }
 
+        // デバッグ用のテストメッセージ
+        console.log('🚀 スクリプトが読み込まれました');
+        
         // アプリケーションの初期化
         document.addEventListener('DOMContentLoaded', () => {
-            new MenuApp();
+            console.log('📄 DOMが読み込まれました');
+            console.log('🎯 MenuAppを初期化します');
+            try {
+                new MenuApp();
+            } catch (error) {
+                console.error('❌ MenuApp初期化エラー:', error);
+            }
         });
     </script>
 </body>
